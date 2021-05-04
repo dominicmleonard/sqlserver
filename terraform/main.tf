@@ -56,6 +56,42 @@ resource "azurerm_network_security_group" "myterraformnsg" {
         destination_address_prefix = "*"
     }
 
+    security_rule {
+        name                       = "winrm"
+        priority                   = 1003
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "5986"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "http"
+        priority                   = 1004
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "80"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "smb"
+        priority                   = 1005
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "445"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
+
     
 }
 ## <https://www.terraform.io/docs/providers/azurerm/r/network_interface.html>
@@ -79,7 +115,7 @@ resource "azurerm_windows_virtual_machine" "secretserver" {
   location            = azurerm_resource_group.thycotic.location
   size                = "Standard_B2ms"
   admin_username      = "adminuser"
-  admin_password      = var.admin-password
+  admin_password      = var.kv-admin-user-password
   network_interface_ids = [
     azurerm_network_interface.internal.id,
   ]
@@ -111,9 +147,4 @@ resource "azurerm_virtual_machine_extension" "vmext" {
     }
 SETTINGS
 
-}
-
-output "secrectserver_pub_ip" {
-  description = "Public IP Address of SecretServer"
-  value       = azurerm_public_ip.myterraformpublicip.ip_address
 }
