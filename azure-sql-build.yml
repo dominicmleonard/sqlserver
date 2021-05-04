@@ -1,0 +1,81 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+variables:
+- group: kvault-p01
+
+pool:
+  vmImage: ubuntu-latest
+stages:
+- stage: Build
+  displayName: Terraform Build
+  jobs:
+  - job: Build
+    steps: 
+      - task: CmdLine@2
+        displayName: Terraform Init
+        inputs:
+          script: 'terraform init -backend-config="access_key=$(kv-terradom01-key1)"'
+          workingDirectory: 'terraform'
+
+      - task: CmdLine@2
+        displayName: Terraform Validate
+        inputs:
+          script: 'terraform validate'
+          workingDirectory: 'terraform'
+
+      - task: CmdLine@2
+        displayName: Terraform Plan
+        inputs:
+          script: 'terraform plan -input=false -out=tfplan -var="kv-admin-user-password=$(kv-admin-user-password)" -var="kv-ado-spn-appid=$(kv-ado-spn-appid)" -var="kv-ado-spn-password=$(kv-ado-spn-password)" -var="kv-ado-spn-tenant=$(kv-ado-spn-tenant)"'
+          workingDirectory: 'terraform'
+
+      - task: CmdLine@2
+        displayName: Terraform Apply
+        inputs:
+          script: 'terraform apply -auto-approve -input=false tfplan'
+          workingDirectory: 'terraform'
+
+- stage: Config
+  displayName: Ansible Config
+  jobs:
+  - job: Config
+    steps:
+
+      - task: CmdLine@2
+        displayName: Install pywinrm
+        inputs:
+         script: 'pip install -t /opt/pipx/venvs/ansible-base/lib/python3.8/site-packages pywinrm winrm'
+      
+      - task: CmdLine@2
+        displayName: Install Ansible Community.Windows
+        inputs:
+          script: ansible-galaxy collection install community.windows
+      - task: CmdLine@2
+        displayName: Terraform Init
+        inputs:
+          script: 'terraform init -backend-config="access_key=$(kv-terradom01-key1)"'
+          workingDirectory: 'terraform'
+      - task: CmdLine@2
+        displayName: terf out
+        inputs:
+          script: 'terraform output'
+          workingDirectory: 'terraform'
+      - task: raul-arrieta.terraform-outputs.terraform-outputs.terraform-outputs@0
+        displayName: 'Terraform Outputs'
+        inputs:
+          workingDirectory: terraform
+
+      - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+        displayName: 'Replace tokens in inventory,*.yml'
+        inputs:
+          rootDirectory: ansible
+          targetFiles: 'inventory,*.yml'
+
+      - task: CmdLine@2
+        displayName: Install SQL Express via Choco
+        inputs:
+          script: 'ansible-playbook -i inventory install-sql-expr.yml -vvvv'
+          workingDirectory: 'ansible'
