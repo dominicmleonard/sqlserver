@@ -1,0 +1,28 @@
+---
+- hosts: secretserver
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: adminuser
+    ansible_become_password: #{kv-admin-user-password}#
+  tasks:
+
+    - name: Install SQL Express via Choco
+      win_chocolatey:
+        name: sql-server-express
+        params: /ACTION=INSTALL /FEATURES=SQLENGINE /INSTANCENAME=MSSQLSERVER /SECURITYMODE=SQL /SAPWD="P@ssword!" /SQLSVCACCOUNT="NT AUTHORITY\System" /AGTSVCACCOUNT="NT AUTHORITY\System" /SQLSYSADMINACCOUNTS="BUILTIN\Administrators" /IACCEPTSQLSERVERLICENSETERMS=1 /TCPENABLED=1 /UPDATEENABLED=False
+        state: present
+
+  # - name: Download SQL Express
+  #   ansible.windows.win_get_url:
+  #     url: #{kv-sqlserver-source}#
+  #     dest: C:\Temp\Source.zip
+
+  # - name: Unzip SQL Server Installer to Temp
+  #   community.windows.win_unzip:
+  #     src: C:\Temp\Source.zip
+  #     dest: C:\Temp\
+
+  # - name: Run SQL Installer
+  #   win_shell: |
+  #     C:\temp\source\SQLEXPR_x64_ENU\SETUP.exe /Q /ACTION=INSTALL /FEATURES=SQLENGINE /INSTANCENAME=MSSQLSERVER /SECURITYMODE=SQL /SAPWD="P@ssword!" /SQLSVCACCOUNT="NT AUTHORITY\System" /AGTSVCACCOUNT="NT AUTHORITY\System" /SQLSYSADMINACCOUNTS="BUILTIN\Administrators" /IACCEPTSQLSERVERLICENSETERMS=1 /TCPENABLED=1 /UPDATEENABLED=False

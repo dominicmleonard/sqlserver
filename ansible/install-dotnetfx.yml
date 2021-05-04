@@ -1,0 +1,17 @@
+---
+- hosts: secretserver
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: adminuser
+    ansible_become_password: #{kv-admin-user-password}#
+  tasks:
+
+  - name: Install .Net 4.8
+    win_chocolatey:
+      name: dotnetfx
+      state: present
+    register: install_response
+
+  - win_reboot:
+    when: install_response.changed == true and install_response.rc == 3010
