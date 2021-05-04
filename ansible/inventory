@@ -1,7 +1,7 @@
-[secretserver]
-#{secrectserver_pub_ip}#
+[sqlserver]
+#{sqlserver_pub_ip}#
 
-[secretserver:vars]
+[sqlserver:vars]
 ansible_user=adminuser
 ansible_password=#{kv-admin-user-password}#
 ansible_connection=winrm
