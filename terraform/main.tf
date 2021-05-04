@@ -1,5 +1,5 @@
-resource "azurerm_resource_group" "thycotic" {
-  name     = "thycotic-rg-001"
+resource "azurerm_resource_group" "sql" {
+  name     = "sql-rg-001"
   location = var.location-name
 }
 
@@ -7,30 +7,30 @@ resource "azurerm_resource_group" "thycotic" {
 resource "azurerm_virtual_network" "vnet" {
   name                = "vNet"
   address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.thycotic.location
-  resource_group_name = azurerm_resource_group.thycotic.name
+  location            = azurerm_resource_group.sql.location
+  resource_group_name = azurerm_resource_group.sql.name
 }
 
 ## <https://www.terraform.io/docs/providers/azurerm/r/subnet.html> 
 resource "azurerm_subnet" "subnet" {
   name                 = "internal"
-  resource_group_name  = azurerm_resource_group.thycotic.name
+  resource_group_name  = azurerm_resource_group.sql.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefix       = "10.0.2.0/24"
 }
 
 resource "azurerm_public_ip" "myterraformpublicip" {
     name                = "myPublicIP"
-    location            = azurerm_resource_group.thycotic.location
-    resource_group_name = azurerm_resource_group.thycotic.name
+    location            = azurerm_resource_group.sql.location
+    resource_group_name = azurerm_resource_group.sql.name
     allocation_method   = "Dynamic"
 
 }
 
 resource "azurerm_network_security_group" "myterraformnsg" {
     name                = "myNetworkSecurityGroup"
-    location            = azurerm_resource_group.thycotic.location
-    resource_group_name = azurerm_resource_group.thycotic.name
+    location            = azurerm_resource_group.sql.location
+    resource_group_name = azurerm_resource_group.sql.name
 
     security_rule {
         name                       = "RDP"
@@ -97,8 +97,8 @@ resource "azurerm_network_security_group" "myterraformnsg" {
 ## <https://www.terraform.io/docs/providers/azurerm/r/network_interface.html>
 resource "azurerm_network_interface" "internal" {
   name                = "internal-nic"
-  location            = azurerm_resource_group.thycotic.location
-  resource_group_name = azurerm_resource_group.thycotic.name
+  location            = azurerm_resource_group.sql.location
+  resource_group_name = azurerm_resource_group.sql.name
 
   ip_configuration {
     name                          = "internal"
@@ -109,10 +109,10 @@ resource "azurerm_network_interface" "internal" {
 }
 
 ## <https://www.terraform.io/docs/providers/azurerm/r/windows_virtual_machine.html>
-resource "azurerm_windows_virtual_machine" "secretserver" {
+resource "azurerm_windows_virtual_machine" "sqlserver" {
   name                = var.servername
-  resource_group_name = azurerm_resource_group.thycotic.name
-  location            = azurerm_resource_group.thycotic.location
+  resource_group_name = azurerm_resource_group.sql.name
+  location            = azurerm_resource_group.sql.location
   size                = "Standard_B2ms"
   admin_username      = "adminuser"
   admin_password      = var.kv-admin-user-password
@@ -134,8 +134,8 @@ os_disk {
 }
 
 resource "azurerm_virtual_machine_extension" "vmext" {
-  name                 = azurerm_windows_virtual_machine.secretserver.name
-  virtual_machine_id   = azurerm_windows_virtual_machine.secretserver.id
+  name                 = azurerm_windows_virtual_machine.sqlserver.name
+  virtual_machine_id   = azurerm_windows_virtual_machine.sqlserver.id
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
   type_handler_version = "1.10"

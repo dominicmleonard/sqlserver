@@ -8,5 +8,5 @@ variable location-name {
 }
 variable "servername" {
   type    = string
-  default = "secrectserver01"
+  default = "sqlserver01"
 }
